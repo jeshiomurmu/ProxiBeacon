@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ProxiBeacon — Pure Proximity Signals for Digital Nomads</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Three.js for 3D procedural scenes and 3D Nomad Game -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #f8f8f8;
+      --primary: #0000f8;
+      --primary-light: rgba(0, 0, 248, 0.08);
+      --primary-glow: rgba(0, 0, 248, 0.25);
+      --glass-bg: rgba(248, 248, 248, 0.76);
+      --glass-card: rgba(255, 255, 255, 0.85);
+      --glass-border: rgba(255, 255, 255, 0.95);
+      --glass-stroke: rgba(0, 0, 248, 0.12);
+      --glass-shadow: 0 16px 36px -8px rgba(0, 0, 248, 0.09), 0 4px 12px rgba(0, 0, 0, 0.03);
+      --text-main: #060922;
+      --text-muted: #5e6b82;
+      --text-dim: #8c9ba5;
+      --accent-green: #00c853;
+      --accent-amber: #ff9100;
+      --accent-purple: #7c4dff;
+      --accent-blue: #0000f8;
+      --accent-pink: #f50057;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Ambient Glassmorphic Radiant Background Mesh */
+    .ambient-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.6;
+      animation: floatOrb 18s ease-in-out infinite alternate;
+    }
+    .orb-1 {
+      width: 420px;
+      height: 420px;
+      background: radial-gradient(circle, rgba(0, 0, 248, 0.22) 0%, rgba(0, 229, 255, 0.1) 70%, transparent 100%);
+      top: -100px;
+      left: -80px;
+    }
+    .orb-2 {
+      width: 380px;
+      height: 380px;
+      background: radial-gradient(circle, rgba(124, 77, 255, 0.18) 0%, rgba(0, 0, 248, 0.12) 70%, transparent 100%);
+      bottom: 80px;
+      right: -60px;
+      animation-duration: 22s;
+    }
+    .orb-3 {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(0, 200, 83, 0.15) 0%, rgba(0, 0, 248, 0.08) 70%, transparent 100%);
+      top: 45%;
+      left: 30%;
+      animation-duration: 15s;
+    }
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(40px, 30px) scale(1.08); }
+      100% { transform: translate(-30px, 50px) scale(0.94); }
+    }
+
+    /* App Layout */
+    .app-container {
+      position: relative;
+      z-index: 1;
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 96px;
+    }
+
+    /* Glass Panels */
+    .glass-panel {
+      background: var(--glass-card);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      border-radius: var(--radius-lg);
+      position: relative;
+    }
+
+    /* Header */
+    header {
+      padding: 18px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(248, 248, 248, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(0, 0, 248, 0.06);
+    }
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(0, 0, 248, 0.35);
+    }
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 2.2;
+    }
+    .logo-text h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.4px;
+      line-height: 1.1;
+    }
+    .logo-text span {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary);
+      letter-spacing: 0.2px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 11px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 248, 0.25);
+      transition: transform 0.18s ease;
+    }
+    .btn-pill:active { transform: scale(0.96); }
+
+    /* Top Sub-Navigation Tabs */
+    .feature-tabs {
+      display: flex;
+      gap: 6px;
+      padding: 10px 16px 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .feature-tabs::-webkit-scrollbar { display: none; }
+    .feature-tab {
+      padding: 7px 12px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 700;
+      background: var(--glass-card);
+      border: 1px solid rgba(0, 0, 248, 0.12);
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .feature-tab.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(0, 0, 248, 0.25);
+    }
+
+    /* Video Reel Banner */
+    .demo-banner {
+      margin: 8px 16px 6px;
+      padding: 11px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240, 244, 255, 0.92));
+      border: 1px solid rgba(0, 0, 248, 0.16);
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .demo-banner:active { transform: scale(0.98); }
+    .banner-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .play-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 248, 0.3);
+      font-size: 13px;
+    }
+    .banner-info h4 {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .banner-info p {
+      font-size: 11px;
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .banner-tag {
+      font-size: 9.5px;
+      font-weight: 700;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 4px 8px;
+      border-radius: 8px;
+    }
+
+    /* My Beacon Controller Card */
+    .my-beacon-card {
+      margin: 8px 16px 10px;
+      padding: 16px;
+    }
+    .beacon-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .beacon-identity {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .beacon-avatar-glow {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 6px 18px var(--primary-glow);
+    }
+    .beacon-avatar-glow.pulsing::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      animation: pulseRings 2s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+    }
+    @keyframes pulseRings {
+      0% { transform: scale(0.9); opacity: 0.9; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+    .beacon-meta h3 {
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .beacon-meta .edit-icon {
+      cursor: pointer;
+      color: var(--primary);
+      display: inline-flex;
+      font-size: 13px;
+    }
+    .beacon-status-sub {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-green);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .beacon-status-sub.dormant {
+      color: var(--text-dim);
+    }
+
+    /* Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 28px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #e2e8f0;
+      transition: .25s;
+      border-radius: 30px;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 4px;
+      bottom: 3px;
+      background-color: white;
+      transition: .25s;
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    input:checked + .slider { background-color: var(--primary); }
+    input:checked + .slider:before { transform: translateX(22px); }
+
+    /* Active Details Box */
+    .beacon-active-details {
+      margin-top: 14px;
+      padding: 10px 12px;
+      background: rgba(0, 0, 248, 0.04);
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(0, 0, 248, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .badge-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .vibe-tag {
+      color: var(--primary);
+      background: #fff;
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,248,0.15);
+      font-weight: 700;
+    }
+    .timer-tag {
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+    .table-cue {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Radar Canvas Container */
+    .radar-wrapper {
+      margin: 4px 16px 12px;
+      height: 310px;
+      position: relative;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(240,244,255,0.85) 100%);
+    }
+    canvas#radarCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .radar-stats-overlay {
+      position: absolute;
+      top: 12px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+      pointer-events: none;
+    }
+    .radar-tap-hint {
+      position: absolute;
+      bottom: 10px;
+      background: rgba(255,255,255,0.94);
+      border: 1px solid rgba(0,0,248,0.18);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--text-main);
+      box-shadow: 0 4px 12px rgba(0,0,248,0.06);
+      pointer-events: none;
+    }
+
+    /* 3D Three.js Radar & Game Canvas Container */
+    .three-wrapper {
+      margin: 4px 16px 12px;
+      height: 360px;
+      position: relative;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: none;
+      background: #04061a;
+      box-shadow: 0 16px 40px rgba(0,0,248,0.2);
+    }
+    .three-wrapper.active {
+      display: block;
+    }
+    #threeCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .three-hud {
+      position: absolute;
+      top: 12px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      pointer-events: none;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    }
+    .game-controls-overlay {
+      position: absolute;
+      bottom: 12px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: auto;
+    }
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 34px);
+      grid-template-rows: repeat(2, 34px);
+      gap: 4px;
+    }
+    .dpad-btn {
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 8px;
+      color: #fff;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .dpad-btn:active { background: var(--primary); }
+
+    /* AI Tools Section */
+    .ai-box {
+      margin: 4px 16px 12px;
+      padding: 16px;
+      display: none;
+    }
+    .ai-box.active {
+      display: block;
+    }
+    .ai-feature-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .ai-mic-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,248,0.3);
+      flex: 1;
+      justify-content: center;
+    }
+    .ai-mic-btn.recording {
+      background: #f50057;
+      animation: micPulse 1.2s infinite;
+    }
+    @keyframes micPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+    .transcription-box {
+      background: #fff;
+      border: 1px solid rgba(0,0,248,0.15);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-size: 13px;
+      min-height: 52px;
+      color: var(--text-main);
+      margin-bottom: 12px;
+    }
+    .ai-coach-card {
+      background: rgba(0,0,248,0.04);
+      border: 1px solid rgba(0,0,248,0.14);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+    }
+    .ai-coach-card h4 {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Google Maps Nomad Cafes Section */
+    .maps-box {
+      margin: 4px 16px 12px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .maps-box.active {
+      display: flex;
+    }
+    .cafe-card {
+      padding: 14px;
+      border-radius: var(--radius-md);
+    }
+    .cafe-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 6px;
+    }
+    .cafe-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .cafe-rating {
+      font-size: 12px;
+      font-weight: 700;
+      color: #ff9100;
+      background: #fff9e6;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .cafe-specs {
+      display: flex;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+    .spec-tag {
+      background: rgba(0,0,248,0.06);
+      color: var(--primary);
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .btn-maps-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+      margin-top: 8px;
+    }
+
+    /* Filters Bar */
+    .filter-bar {
+      margin: 0 16px 10px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      background: var(--glass-card);
+      border: 1px solid rgba(0, 0, 248, 0.12);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .filter-chip.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(0, 0, 248, 0.25);
+    }
+
+    /* Nomads List */
+    .nomads-list {
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .nomad-card {
+      padding: 15px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .nomad-card:active { transform: scale(0.98); }
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nomad-name-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nomad-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .vibe-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .vibe-open { background: rgba(0,200,83,0.12); color: #00a844; }
+    .vibe-coffee { background: rgba(255,145,0,0.12); color: #d67a00; }
+    .vibe-ideas { background: rgba(124,77,255,0.12); color: #651fff; }
+    .vibe-cowork { background: rgba(0,0,248,0.1); color: var(--primary); }
+    .vibe-game { background: rgba(245,0,87,0.12); color: #c51162; }
+
+    .signal-pill {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary);
+      background: rgba(0,0,248,0.06);
+      padding: 3px 8px;
+      border-radius: 8px;
+    }
+    .table-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .topic-quote {
+      margin-top: 8px;
+      font-size: 12px;
+      font-style: italic;
+      color: var(--text-main);
+      background: rgba(248, 248, 248, 0.9);
+      padding: 6px 10px;
+      border-radius: 8px;
+      border-left: 3px solid var(--primary);
+    }
+    .icebreaker-chips {
+      margin-top: 10px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .ice-chip {
+      background: #fff;
+      border: 1px solid rgba(0, 0, 248, 0.15);
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 11px;
+      color: var(--primary);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .card-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+    }
+    .btn-wave {
+      flex: 1;
+      padding: 9px;
+      border-radius: 10px;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 248, 0.25);
+    }
+    .btn-wave.sent {
+      background: #00c853;
+      box-shadow: 0 4px 12px rgba(0, 200, 83, 0.25);
+    }
+
+    /* Bottom Navigation Glass Bar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-top: 1px solid rgba(0, 0, 248, 0.1);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0 16px;
+      z-index: 90;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: var(--text-dim);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color 0.2s;
+      position: relative;
+    }
+    .nav-item.active {
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .nav-item svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+    .nav-badge {
+      position: absolute;
+      top: -2px;
+      right: 6px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 2px 5px;
+      border-radius: 10px;
+    }
+
+    /* Modal / Sheets */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 9, 34, 0.45);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 200;
+      display: flex;
+      align-items: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-sheet {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+      padding: 20px 20px 32px;
+      box-shadow: 0 -12px 40px rgba(0, 0, 248, 0.15);
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .modal-backdrop.open .modal-sheet {
+      transform: translateY(0);
+    }
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .sheet-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 22px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(0, 0, 248, 0.18);
+      font-family: inherit;
+      font-size: 14px;
+      background: #fbfbfb;
+      color: var(--text-main);
+      outline: none;
+    }
+    .form-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 0, 248, 0.12);
+    }
+    .vibe-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .vibe-opt {
+      border: 1px solid rgba(0, 0, 248, 0.12);
+      background: #fff;
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .vibe-opt.selected {
+      border-color: var(--primary);
+      background: rgba(0, 0, 248, 0.05);
+      color: var(--primary);
+    }
+
+    /* Video Reel Modal */
+    .reel-modal {
+      position: fixed;
+      inset: 0;
+      background: #060922;
+      z-index: 300;
+      display: none;
+      flex-direction: column;
+      color: #fff;
+    }
+    .reel-modal.active { display: flex; }
+    .reel-progress-row {
+      display: flex;
+      gap: 4px;
+      padding: 14px 16px 8px;
+    }
+    .reel-bar {
+      flex: 1;
+      height: 3px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .reel-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #fff;
+    }
+    .reel-header {
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .reel-visual-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+    }
+    .reel-card-graphic {
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 24px;
+      padding: 24px;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+    .reel-caption-area {
+      padding: 24px;
+      background: linear-gradient(180deg, transparent, rgba(6,9,34,0.95) 40%);
+    }
+    .reel-caption-area h2 {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .reel-caption-area h3 {
+      font-size: 14px;
+      color: #00d4ff;
+      margin-bottom: 8px;
+    }
+    .reel-caption-area p {
+      font-size: 13px;
+      color: rgba(255,255,255,0.85);
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Radiant Mesh -->
+  <div class="ambient-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header>
+      <div class="logo-group">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3" fill="currentColor"/>
+            <path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 16.24a6 6 0 0 1 0-8.49m11.31-2.83a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1>ProxiBeacon</h1>
+          <span>ZERO PROFILES • PURE PROXIMITY</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-pill" onclick="openReel()">
+          ▶ Video Reel
+        </button>
+      </div>
+    </header>
+
+    <!-- Top Feature View Tabs (2D Radar, 3D Game & Three.js, AI Voice, Google Maps Cafes) -->
+    <div class="feature-tabs">
+      <div class="feature-tab active" id="tab2d" onclick="switchMainView('2d')">📡 2D Radar</div>
+      <div class="feature-tab" id="tab3d" onclick="switchMainView('3d')">🎮 3D Three.js Game</div>
+      <div class="feature-tab" id="tabAi" onclick="switchMainView('ai')">🎙️ AI Voice & Transcribe</div>
+      <div class="feature-tab" id="tabMaps" onclick="switchMainView('maps')">📍 Nomad Cafés (Maps)</div>
+    </div>
+
+    <!-- 30-Second Video Demo Reel Banner -->
+    <div class="glass-panel demo-banner" onclick="openReel()">
+      <div class="banner-left">
+        <div class="play-circle">▶</div>
+        <div class="banner-info">
+          <h4>Watch 30s Animated Video Reel</h4>
+          <p>See how spontaneous nomad waves work</p>
+        </div>
+      </div>
+      <div class="banner-tag">VIDEO DEMO</div>
+    </div>
+
+    <!-- My Beacon Glassmorphic Controller -->
+    <div class="glass-panel my-beacon-card">
+      <div class="beacon-top-row">
+        <div class="beacon-identity">
+          <div class="beacon-avatar-glow pulsing" id="avatarIcon">💻</div>
+          <div class="beacon-meta">
+            <h3 id="myHandleDisplay">Alex ⚡ Kotlin Dev <span class="edit-icon" onclick="openConfig()">✎</span></h3>
+            <div class="beacon-status-sub" id="beaconStatusText">
+              ● Broadcasting Presence
+            </div>
+          </div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="beaconToggle" checked onchange="toggleBeacon(this.checked)">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="beacon-active-details" id="activeDetails">
+        <div class="badge-row">
+          <span class="vibe-tag" id="currentVibeBadge">🟢 Open to Chat</span>
+          <span class="timer-tag" id="countdownDisplay">58m 20s remaining</span>
+        </div>
+        <div class="table-cue">
+          📍 <span id="currentTableCue">Window high-top table #3 • "Building offline AI apps"</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. Live Concentric 2D Radar Canvas -->
+    <div class="glass-panel radar-wrapper" id="view2dRadar">
+      <div class="radar-stats-overlay">
+        <span>CONCENTRIC BLE RADAR</span>
+        <span id="nomadsCountHeader">4 NOMADS IN RANGE</span>
+      </div>
+      <canvas id="radarCanvas"></canvas>
+      <div class="radar-tap-hint">Tap any glowing blip to wave 👋</div>
+    </div>
+
+    <!-- 2. Three.js 3D Interactive Scene & Game -->
+    <div class="three-wrapper" id="view3dGame">
+      <canvas id="threeCanvas"></canvas>
+      <div class="three-hud">
+        <span>🎮 BEACON BLITZ 3D</span>
+        <span>SCORE: <span id="gameScore" style="color:#00ff88;">0</span> | PINGS: <span id="gamePings">0</span></span>
+      </div>
+      <div class="game-controls-overlay">
+        <div style="font-size: 11px; color: rgba(255,255,255,0.7);">
+          WASD or D-pad to collect Coffee & connect Beacons!
+        </div>
+        <div class="dpad">
+          <div></div>
+          <div class="dpad-btn" onclick="movePlayer(0, -1)">▲</div>
+          <div></div>
+          <div class="dpad-btn" onclick="movePlayer(-1, 0)">◀</div>
+          <div class="dpad-btn" onclick="movePlayer(0, 1)">▼</div>
+          <div class="dpad-btn" onclick="movePlayer(1, 0)">▶</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. AI Voice, Transcription & Icebreaker Coach -->
+    <div class="glass-panel ai-box" id="viewAi">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="font-size:15px; font-weight:800;">🎙️ AI Voice & Transcription</h3>
+        <span style="font-size:10px; font-weight:700; color:var(--primary); background:var(--primary-light); padding:3px 8px; border-radius:6px;">gemini-3.5-transcribe</span>
+      </div>
+
+      <div class="ai-feature-row">
+        <button class="ai-mic-btn" id="micBtn" onclick="toggleSpeechRecording()">
+          <span id="micIcon">🎤</span> <span id="micLabel">Speak Voice Note</span>
+        </button>
+      </div>
+
+      <div class="transcription-box" id="transcriptionOutput">
+        <em>Press "Speak Voice Note" to speak your topic or coffee conversation hook hands-free...</em>
+      </div>
+
+      <div class="ai-coach-card">
+        <h4>✨ Live AI Icebreaker Coach (gemini-3.8-live)</h4>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
+          Want to break the ice with nearby nomads without awkwardness?
+        </p>
+        <button class="btn-pill" style="width:100%; justify-content:center; padding:9px;" onclick="generateAiIcebreakers()">
+          Generate Spontaneous Icebreaker Hooks 💡
+        </button>
+        <div id="aiIcebreakerResults" style="margin-top:10px; display:none; font-size:12px; line-height:1.5;"></div>
+      </div>
+    </div>
+
+    <!-- 4. Google Maps Nomad Grounding Cafés -->
+    <div class="maps-box" id="viewMaps">
+      <div class="glass-panel" style="padding:14px; margin-bottom:4px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="font-size:15px; font-weight:800;">📍 Verified Nomad Cafés</h3>
+          <span style="font-size:10px; font-weight:700; color:#ff9100; background:#fff9e6; padding:3px 8px; border-radius:6px;">Google Maps Grounding</span>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">
+          Grounding data for workspaces with tested WiFi, power outlets, and active nomad presence.
+        </p>
+      </div>
+
+      <div class="glass-panel cafe-card">
+        <div class="cafe-card-top">
+          <div class="cafe-name">Copenhagen Coffee Lab — Baixa</div>
+          <div class="cafe-rating">★ 4.7 (1.4k)</div>
+        </div>
+        <div class="cafe-specs">
+          <span class="spec-tag">📶 180 Mbps WiFi</span>
+          <span class="spec-tag">🔌 High Outlet Density</span>
+          <span class="spec-tag">☕ Specialty Roast</span>
+        </div>
+        <a href="https://www.google.com/maps/search/Copenhagen+Coffee+Lab+Baixa+Lisbon" target="_blank" class="btn-maps-link">
+          Open in Google Maps ↗
+        </a>
+      </div>
+
+      <div class="glass-panel cafe-card">
+        <div class="cafe-card-top">
+          <div class="cafe-name">Dear Breakfast — Chiado</div>
+          <div class="cafe-rating">★ 4.6 (980)</div>
+        </div>
+        <div class="cafe-specs">
+          <span class="spec-tag">📶 120 Mbps WiFi</span>
+          <span class="spec-tag">🍳 Great Brunch</span>
+          <span class="spec-tag">🌱 Quiet Work Loft</span>
+        </div>
+        <a href="https://www.google.com/maps/search/Dear+Breakfast+Chiado" target="_blank" class="btn-maps-link">
+          Open in Google Maps ↗
+        </a>
+      </div>
+
+      <div class="glass-panel cafe-card">
+        <div class="cafe-card-top">
+          <div class="cafe-name">Hello, Kristof — Poço dos Negros</div>
+          <div class="cafe-rating">★ 4.8 (820)</div>
+        </div>
+        <div class="cafe-specs">
+          <span class="spec-tag">📶 150 Mbps WiFi</span>
+          <span class="spec-tag">📚 Magazine & Tech Corner</span>
+          <span class="spec-tag">☕ Oat Flat Whites</span>
+        </div>
+        <a href="https://www.google.com/maps/search/Hello+Kristof+Lisbon" target="_blank" class="btn-maps-link">
+          Open in Google Maps ↗
+        </a>
+      </div>
+    </div>
+
+    <!-- Vibe Filter Chips -->
+    <div class="filter-bar">
+      <div class="filter-chip active" onclick="filterVibe('all', this)">All Vibes</div>
+      <div class="filter-chip" onclick="filterVibe('open', this)">🟢 Open to Chat</div>
+      <div class="filter-chip" onclick="filterVibe('coffee', this)">☕ Coffee Run</div>
+      <div class="filter-chip" onclick="filterVibe('ideas', this)">💡 Brainstorm</div>
+      <div class="filter-chip" onclick="filterVibe('cowork', this)">🤝 Cowork Chill</div>
+      <div class="filter-chip" onclick="filterVibe('game', this)">♟️ Game</div>
+    </div>
+
+    <!-- Surrounding Nomads List -->
+    <div class="nomads-list" id="nomadsContainer">
+      <!-- Injected via JS -->
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="switchNav('radar', this)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="3" x2="12" y2="12"/></svg>
+      Radar
+    </div>
+    <div class="nav-item" onclick="switchNav('nomads', this)">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Nomads
+      <span class="nav-badge" id="nomadBadge">4</span>
+    </div>
+    <div class="nav-item" onclick="switchNav('signals', this)">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Signals
+      <span class="nav-badge" id="signalsBadge" style="display:none">1</span>
+    </div>
+  </div>
+
+  <!-- Config Sheet Modal -->
+  <div class="modal-backdrop" id="configModal">
+    <div class="modal-sheet">
+      <div class="sheet-header">
+        <h3 class="sheet-title">Configure My Beacon</h3>
+        <button class="close-btn" onclick="closeConfig()">×</button>
+      </div>
+
+      <div class="form-group">
+        <label>Ephemeral Handle</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="handleInput" class="form-input" value="Alex ⚡ Kotlin Dev">
+          <button type="button" class="btn-pill" onclick="randomizeHandle()">🎲 Dice</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Real-Time Vibe Status</label>
+        <div class="vibe-grid">
+          <div class="vibe-opt selected" onclick="selectVibe('🟢 Open to Chat', this)">🟢 Open to Chat</div>
+          <div class="vibe-opt" onclick="selectVibe('☕ Coffee Run', this)">☕ Coffee Run</div>
+          <div class="vibe-opt" onclick="selectVibe('💡 Brainstorm', this)">💡 Brainstorm</div>
+          <div class="vibe-opt" onclick="selectVibe('🤝 Cowork Chill', this)">🤝 Cowork Chill</div>
+          <div class="vibe-opt" onclick="selectVibe('♟️ Quick Game', this)">♟️ Quick Game</div>
+          <div class="vibe-opt" onclick="selectVibe('🎯 Deep Focus', this)">🎯 Deep Focus</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Seating / Table Cue (No GPS)</label>
+        <input type="text" id="tableInput" class="form-input" value="Window high-top table #3, by monsteras">
+      </div>
+
+      <div class="form-group">
+        <label>Topic / Conversation Hook</label>
+        <input type="text" id="topicInput" class="form-input" value="Building offline AI mobile apps & Lisbon tips">
+      </div>
+
+      <button class="btn-pill" style="width: 100%; justify-content: center; padding: 13px; font-size: 14px; border-radius: 12px;" onclick="saveConfig()">
+        Save & Broadcast Beacon
+      </button>
+    </div>
+  </div>
+
+  <!-- Wave Modal -->
+  <div class="modal-backdrop" id="waveModal">
+    <div class="modal-sheet">
+      <div class="sheet-header">
+        <h3 class="sheet-title" id="waveModalTitle">Send Proximity Wave</h3>
+        <button class="close-btn" onclick="closeWaveModal()">×</button>
+      </div>
+
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;" id="waveModalSubtitle">
+        Broadcast an in-person hello directly to this nomad's device.
+      </p>
+
+      <div class="form-group">
+        <label>Instant Icebreakers (Tap to select)</label>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div class="ice-chip" style="padding: 8px;" onclick="setWaveMsg('👋 Saw your beacon! Want to grab a quick coffee refuel?')">
+            "👋 Saw your beacon! Want to grab a quick coffee refuel?"
+          </div>
+          <div class="ice-chip" style="padding: 8px;" onclick="setWaveMsg('💡 Love your project topic. Mind if I say hi for 5 mins?')">
+            "💡 Love your project topic. Mind if I say hi for 5 mins?"
+          </div>
+          <div class="ice-chip" style="padding: 8px;" onclick="setWaveMsg('☕ How are you liking the espresso roast here today?')">
+            "☕ How are you liking the espresso roast here today?"
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Wave Note</label>
+        <input type="text" id="waveInput" class="form-input" value="👋 Hey! Saw your beacon. Pull up a chair or say hi when ready!">
+      </div>
+
+      <button class="btn-pill" style="width: 100%; justify-content: center; padding: 13px; font-size: 14px; border-radius: 12px;" onclick="confirmSendWave()">
+        Broadcast Wave 👋
+      </button>
+    </div>
+  </div>
+
+  <!-- 30-Second Video Reel Fullscreen Modal -->
+  <div class="reel-modal" id="reelModal">
+    <div class="reel-progress-row">
+      <div class="reel-bar"><div class="reel-bar-fill" id="rb0"></div></div>
+      <div class="reel-bar"><div class="reel-bar-fill" id="rb1"></div></div>
+      <div class="reel-bar"><div class="reel-bar-fill" id="rb2"></div></div>
+      <div class="reel-bar"><div class="reel-bar-fill" id="rb3"></div></div>
+      <div class="reel-bar"><div class="reel-bar-fill" id="rb4"></div></div>
+    </div>
+
+    <div class="reel-header">
+      <span style="font-size: 12px; font-weight: 700; color: #00d4ff;" id="reelTag">SCENE 1/5 • THE PROBLEM</span>
+      <button style="background:none; border:none; color:#fff; font-size:24px; cursor:pointer;" onclick="closeReel()">×</button>
+    </div>
+
+    <div class="reel-visual-area" onclick="nextReelScene()">
+      <div class="reel-card-graphic" id="reelGraphic"></div>
+    </div>
+
+    <div class="reel-caption-area">
+      <h2 id="reelTitle">Sit Down at Any Café</h2>
+      <h3 id="reelSubtitle">No algorithms. No profiles. Just proximity.</h3>
+      <p id="reelText">
+        Standard apps match you with people 50 miles away. ProxiBeacon detects only who is sitting right here in this room with you.
+      </p>
+      <div style="margin-top: 16px; display: flex; gap: 10px;">
+        <button class="btn-pill" style="flex:1; justify-content:center; padding: 12px; font-size: 14px;" onclick="launchFromReel()">
+          Launch Live Café Radar 📡
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    const nomads = [
+      {
+        id: 'maya_01',
+        handle: 'Maya 🎨 UI/UX Nomad',
+        vibe: 'open',
+        vibeLabel: '🟢 Open to Chat',
+        topic: 'Designing mobile micro-interactions & looking for best pour-over in Baixa',
+        table: 'Corner table by the plants',
+        rssi: -51,
+        dist: 1.2,
+        angle: 45,
+        color: '#00c853',
+        hooks: ['What design tool do you use?', 'Best café in Lisbon so far?']
+      },
+      {
+        id: 'kai_02',
+        handle: 'Kai ☕ Solo SaaS Builder',
+        vibe: 'coffee',
+        vibeLabel: '☕ Coffee Run',
+        topic: 'Bootstrapping an offline-first KMP app, grabbing a flat white',
+        table: 'Espresso bar high-top',
+        rssi: -62,
+        dist: 2.3,
+        angle: 135,
+        color: '#ff9100',
+        hooks: ['Solo founder or team?', 'How is the roast today?']
+      },
+      {
+        id: 'elena_03',
+        handle: 'Elena 💡 Edge AI Researcher',
+        vibe: 'ideas',
+        vibeLabel: '💡 Brainstorm',
+        topic: 'Quantized LLMs & on-device embeddings benchmark',
+        table: 'Big oak communal table',
+        rssi: -71,
+        dist: 3.7,
+        angle: 215,
+        color: '#7c4dff',
+        hooks: ['Running local models?', 'Which city next?']
+      },
+      {
+        id: 'lucas_04',
+        handle: 'Lucas 🤝 Backend & Rust',
+        vibe: 'cowork',
+        vibeLabel: '🤝 Cowork Chill',
+        topic: 'Distributed SQLite, high-throughput pipelines',
+        table: 'Mezzanine lounge couch',
+        rssi: -79,
+        dist: 5.4,
+        angle: 310,
+        color: '#0000f8',
+        hooks: ['Vim or VSCode?', 'Working late today?']
+      }
+    ];
+
+    let myBeaconActive = true;
+    let selectedNomad = null;
+    let currentFilter = 'all';
+
+    // View Switching: 2D Radar, 3D Game, AI Voice, Maps
+    function switchMainView(view) {
+      document.querySelectorAll('.feature-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('view2dRadar').style.display = 'none';
+      document.getElementById('view3dGame').classList.remove('active');
+      document.getElementById('viewAi').classList.remove('active');
+      document.getElementById('viewMaps').classList.remove('active');
+
+      if (view === '2d') {
+        document.getElementById('tab2d').classList.add('active');
+        document.getElementById('view2dRadar').style.display = 'flex';
+      } else if (view === '3d') {
+        document.getElementById('tab3d').classList.add('active');
+        document.getElementById('view3dGame').classList.add('active');
+        initThreeJsGame();
+      } else if (view === 'ai') {
+        document.getElementById('tabAi').classList.add('active');
+        document.getElementById('viewAi').classList.add('active');
+      } else if (view === 'maps') {
+        document.getElementById('tabMaps').classList.add('active');
+        document.getElementById('viewMaps').classList.add('active');
+      }
+    }
+
+    // Audio synthesizer for waves
+    function playWaveSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.32);
+      } catch(e) {}
+    }
+
+    // Render Nomads Cards
+    function renderNomads() {
+      const container = document.getElementById('nomadsContainer');
+      container.innerHTML = '';
+
+      const filtered = nomads.filter(n => currentFilter === 'all' || n.vibe === currentFilter);
+      document.getElementById('nomadsCountHeader').innerText = `${filtered.length} NOMADS IN RANGE`;
+      document.getElementById('nomadBadge').innerText = filtered.length;
+
+      filtered.forEach(n => {
+        const card = document.createElement('div');
+        card.className = 'glass-panel nomad-card';
+        card.innerHTML = `
+          <div class="card-top">
+            <div class="nomad-name-group">
+              <span class="nomad-name">${n.handle}</span>
+              <span class="vibe-pill vibe-${n.vibe}">${n.vibeLabel}</span>
+            </div>
+            <span class="signal-pill">~${n.dist}m (${n.rssi} dBm)</span>
+          </div>
+          <div class="table-hint">📍 ${n.table}</div>
+          <div class="topic-quote">"${n.topic}"</div>
+          <div class="icebreaker-chips">
+            ${n.hooks.map(h => `<div class="ice-chip" onclick="quickIce('${n.id}', '${h}')">💬 ${h}</div>`).join('')}
+          </div>
+          <div class="card-actions">
+            <button class="btn-wave" id="btn_${n.id}" onclick="openWave('${n.id}')">
+              <span>👋</span> Send Proximity Wave
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // 2D Radar Canvas Engine
+    const canvas = document.getElementById('radarCanvas');
+    const ctx = canvas.getContext('2d');
+    let sweepAngle = 0;
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function drawRadar() {
+      if (document.getElementById('view2dRadar').style.display === 'none') {
+        requestAnimationFrame(drawRadar);
+        return;
+      }
+      const w = canvas.width;
+      const h = canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const maxR = Math.min(cx, cy) * 0.88;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Concentric Distance Circles
+      const rings = [0.25, 0.5, 0.75, 1.0];
+      const ringLabels = ['1.5m', '3m', '6m', '10m'];
+
+      rings.forEach((r, idx) => {
+        ctx.beginPath();
+        ctx.arc(cx, cy, maxR * r, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(0, 0, 248, 0.12)';
+        ctx.lineWidth = 1.5 * window.devicePixelRatio;
+        ctx.setLineDash([4 * window.devicePixelRatio, 4 * window.devicePixelRatio]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#8c9ba5';
+        ctx.font = `${10 * window.devicePixelRatio}px 'Plus Jakarta Sans'`;
+        ctx.fillText(ringLabels[idx], cx + 6, cy - (maxR * r) + 12);
+      });
+
+      // Crosshairs
+      ctx.beginPath();
+      ctx.moveTo(cx - maxR, cy); ctx.lineTo(cx + maxR, cy);
+      ctx.moveTo(cx, cy - maxR); ctx.lineTo(cx, cy + maxR);
+      ctx.strokeStyle = 'rgba(0, 0, 248, 0.08)';
+      ctx.stroke();
+
+      // Rotating Sweep Beam
+      const rad = sweepAngle * Math.PI / 180;
+      const sweepX = cx + maxR * Math.cos(rad);
+      const sweepY = cy + maxR * Math.sin(rad);
+
+      const grad = ctx.createLinearGradient(cx, cy, sweepX, sweepY);
+      grad.addColorStop(0, 'rgba(0, 0, 248, 0.35)');
+      grad.addColorStop(1, 'rgba(0, 0, 248, 0)');
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, maxR, rad - 0.25, rad);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Center (Me)
+      ctx.beginPath();
+      ctx.arc(cx, cy, 7 * window.devicePixelRatio, 0, Math.PI * 2);
+      ctx.fillStyle = myBeaconActive ? '#0000f8' : '#8c9ba5';
+      ctx.fill();
+
+      // Draw Nomad Blips
+      nomads.forEach(n => {
+        const distRatio = Math.min(n.dist / 10, 0.95);
+        const blipR = distRatio * maxR;
+        const bRad = (n.angle * Math.PI) / 180;
+        const bx = cx + blipR * Math.cos(bRad);
+        const by = cy + blipR * Math.sin(bRad);
+
+        ctx.beginPath();
+        ctx.arc(bx, by, 12 * window.devicePixelRatio, 0, Math.PI * 2);
+        ctx.fillStyle = `${n.color}33`;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(bx, by, 6 * window.devicePixelRatio, 0, Math.PI * 2);
+        ctx.fillStyle = n.color;
+        ctx.fill();
+      });
+
+      sweepAngle = (sweepAngle + 1.2) % 360;
+      requestAnimationFrame(drawRadar);
+    }
+    requestAnimationFrame(drawRadar);
+
+    // Canvas click detection
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * window.devicePixelRatio;
+      const y = (e.clientY - rect.top) * window.devicePixelRatio;
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const maxR = Math.min(cx, cy) * 0.88;
+
+      let closest = null;
+      let minD = 40 * window.devicePixelRatio;
+
+      nomads.forEach(n => {
+        const distRatio = Math.min(n.dist / 10, 0.95);
+        const blipR = distRatio * maxR;
+        const bRad = (n.angle * Math.PI) / 180;
+        const bx = cx + blipR * Math.cos(bRad);
+        const by = cy + blipR * Math.sin(bRad);
+        const d = Math.hypot(bx - x, by - y);
+        if (d < minD) {
+          minD = d;
+          closest = n;
+        }
+      });
+
+      if (closest) {
+        openWave(closest.id);
+      }
+    });
+
+    // ==========================================
+    // Three.js 3D Holographic Scene & Nomad Game
+    // ==========================================
+    let threeInitialized = false;
+    let threeRenderer, threeScene, threeCamera;
+    let playerMesh, coffeeMeshes = [], nomadMeshes = [];
+    let gameScore = 0, gamePings = 0;
+    const playerPos = { x: 0, z: 0 };
+
+    function initThreeJsGame() {
+      if (threeInitialized) return;
+      const container = document.getElementById('view3dGame');
+      const canvas3d = document.getElementById('threeCanvas');
+
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      // Renderer with tone mapping
+      threeRenderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true, alpha: false });
+      threeRenderer.setSize(width, height);
+      threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      threeRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+      threeRenderer.toneMappingExposure = 1.2;
+
+      threeScene = new THREE.Scene();
+      threeScene.background = new THREE.Color(0x060922);
+      threeScene.fog = new THREE.FogExp2(0x060922, 0.04);
+
+      threeCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+      threeCamera.position.set(0, 18, 18);
+      threeCamera.lookAt(0, 0, 0);
+
+      // Studio Lighting
+      const hemiLight = new THREE.HemisphereLight(0x00d4ff, 0x0000f8, 1.2);
+      threeScene.add(hemiLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
+      dirLight.position.set(10, 20, 10);
+      threeScene.add(dirLight);
+
+      // Procedural 3D Grid Platform
+      const gridHelper = new THREE.GridHelper(24, 24, 0x0000f8, 0x1a264a);
+      threeScene.add(gridHelper);
+
+      // Concentric Radar Rings in 3D
+      [3, 6, 9].forEach(r => {
+        const ringGeo = new THREE.RingGeometry(r - 0.04, r + 0.04, 64);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x0000f8, side: THREE.DoubleSide, transparent: true, opacity: 0.35 });
+        const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+        ringMesh.rotation.x = Math.PI / 2;
+        ringMesh.position.y = 0.02;
+        threeScene.add(ringMesh);
+      });
+
+      // Player Beacon Avatar (Composite 3-part procedural model)
+      const playerGroup = new THREE.Group();
+      const baseGeo = new THREE.CylinderGeometry(0.8, 1.0, 0.3, 16);
+      const baseMat = new THREE.MeshStandardMaterial({ color: 0x0000f8, metalness: 0.8, roughness: 0.2 });
+      const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+      playerGroup.add(baseMesh);
+
+      const orbGeo = new THREE.SphereGeometry(0.5, 32, 32);
+      const orbMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x0088ff, emissiveIntensity: 0.6, metalness: 0.2, roughness: 0.1 });
+      const orbMesh = new THREE.Mesh(orbGeo, orbMat);
+      orbMesh.position.y = 0.8;
+      playerGroup.add(orbMesh);
+
+      playerMesh = playerGroup;
+      threeScene.add(playerMesh);
+
+      // Procedural 3D Coffee Collectibles
+      spawnCoffees();
+
+      // Procedural 3D Nomad Beacons in scene
+      nomads.forEach((n, idx) => {
+        const nGroup = new THREE.Group();
+        const nGeo = new THREE.CylinderGeometry(0.5, 0.7, 1.2, 16);
+        const nMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(n.color), metalness: 0.7, roughness: 0.3 });
+        const m = new THREE.Mesh(nGeo, nMat);
+        m.position.y = 0.6;
+        nGroup.add(m);
+
+        const distRatio = n.dist * 1.4;
+        const bRad = (n.angle * Math.PI) / 180;
+        nGroup.position.set(distRatio * Math.cos(bRad), 0, distRatio * Math.sin(bRad));
+        threeScene.add(nGroup);
+        nomadMeshes.push(nGroup);
+      });
+
+      // 60fps Loop
+      let clock = new THREE.Clock();
+      function animate3D() {
+        requestAnimationFrame(animate3D);
+        const dt = Math.min(clock.getDelta(), 0.05);
+
+        // Gentle floating animation
+        if (playerMesh) {
+          playerMesh.position.x = playerPos.x;
+          playerMesh.position.z = playerPos.z;
+          playerMesh.rotation.y += 0.8 * dt;
+        }
+
+        // Rotate coffee items
+        coffeeMeshes.forEach(c => {
+          c.rotation.y += 2.0 * dt;
+        });
+
+        // Check coffee collision
+        coffeeMeshes.forEach((c, idx) => {
+          const d = Math.hypot(playerPos.x - c.position.x, playerPos.z - c.position.z);
+          if (d < 1.0) {
+            threeScene.remove(c);
+            coffeeMeshes.splice(idx, 1);
+            gameScore += 100;
+            document.getElementById('gameScore').innerText = gameScore;
+            playWaveSound();
+          }
+        });
+
+        // Check nomad ping collision
+        nomadMeshes.forEach((nm, idx) => {
+          const d = Math.hypot(playerPos.x - nm.position.x, playerPos.z - nm.position.z);
+          if (d < 1.4) {
+            gamePings++;
+            document.getElementById('gamePings').innerText = gamePings;
+            gameScore += 250;
+            document.getElementById('gameScore').innerText = gameScore;
+            playWaveSound();
+            nm.position.x = 999; // Move away after connection
+          }
+        });
+
+        threeRenderer.render(threeScene, threeCamera);
+      }
+      animate3D();
+      threeInitialized = true;
+    }
+
+    function spawnCoffees() {
+      for (let i = 0; i < 6; i++) {
+        const cGroup = new THREE.Group();
+        const cupGeo = new THREE.CylinderGeometry(0.3, 0.22, 0.45, 12);
+        const cupMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
+        const cup = new THREE.Mesh(cupGeo, cupMat);
+        cup.position.y = 0.25;
+        cGroup.add(cup);
+
+        const x = (Math.random() - 0.5) * 16;
+        const z = (Math.random() - 0.5) * 16;
+        cGroup.position.set(x, 0, z);
+        threeScene.add(cGroup);
+        coffeeMeshes.push(cGroup);
+      }
+    }
+
+    function movePlayer(dx, dz) {
+      playerPos.x = Math.max(-10, Math.min(10, playerPos.x + dx * 1.5));
+      playerPos.z = Math.max(-10, Math.min(10, playerPos.z + dz * 1.5));
+    }
+
+    // Keyboard support for 3D Game
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'w' || e.key === 'ArrowUp') movePlayer(0, -1);
+      if (e.key === 's' || e.key === 'ArrowDown') movePlayer(0, 1);
+      if (e.key === 'a' || e.key === 'ArrowLeft') movePlayer(-1, 0);
+      if (e.key === 'd' || e.key === 'ArrowRight') movePlayer(1, 0);
+    });
+
+    // ==========================================
+    // AI Speech Transcription & Live Icebreakers
+    // ==========================================
+    let isRecording = false;
+    let recognition = null;
+
+    function toggleSpeechRecording() {
+      const btn = document.getElementById('micBtn');
+      const label = document.getElementById('micLabel');
+      const output = document.getElementById('transcriptionOutput');
+
+      if (!isRecording) {
+        // Start Speech Recognition (gemini-3.5-transcribe / Web Speech API)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+          recognition = new SpeechRecognition();
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          recognition.lang = 'en-US';
+
+          recognition.onresult = (event) => {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              transcript += event.results[i][0].transcript;
+            }
+            output.innerText = `"${transcript}"`;
+            document.getElementById('topicInput').value = transcript;
+            document.getElementById('currentTableCue').innerText = `Window Table #3 • "${transcript.slice(0, 40)}"`;
+          };
+
+          recognition.start();
+        } else {
+          // Fallback simulation for devices without mic permission
+          output.innerText = '"Looking for the best pour-over in Lisbon and working on an offline AI beacon app!" (Transcribed)';
+        }
+
+        isRecording = true;
+        btn.classList.add('recording');
+        label.innerText = 'Listening... (Speak now)';
+      } else {
+        if (recognition) recognition.stop();
+        isRecording = false;
+        btn.classList.remove('recording');
+        label.innerText = 'Speak Voice Note';
+      }
+    }
+
+    function generateAiIcebreakers() {
+      const box = document.getElementById('aiIcebreakerResults');
+      box.style.display = 'block';
+      box.innerHTML = '<em>Thinking with Gemini 3.8...</em>';
+
+      setTimeout(() => {
+        box.innerHTML = `
+          <strong>✨ Generated Icebreaker Starters:</strong>
+          <div style="margin-top:6px; display:flex; flex-direction:column; gap:6px;">
+            <div class="ice-chip" onclick="setWaveMsg('👋 Hey! Noticed your design work on Figma. Mind if I ask what system you use?')">
+              1. "👋 Hey! Noticed your design work on Figma. Mind if I ask what system you use?"
+            </div>
+            <div class="ice-chip" onclick="setWaveMsg('☕ Taking a 5-min flat white break. How are you liking the cafe setup here?')">
+              2. "☕ Taking a 5-min flat white break. How are you liking the cafe setup here?"
+            </div>
+            <div class="ice-chip" onclick="setWaveMsg('💡 Bouncing indie mobile ideas today! Down for a quick high-five or break?')">
+              3. "💡 Bouncing indie mobile ideas today! Down for a quick high-five or break?"
+            </div>
+          </div>
+        `;
+      }, 700);
+    }
+
+    // Toggle Beacon
+    function toggleBeacon(active) {
+      myBeaconActive = active;
+      const txt = document.getElementById('beaconStatusText');
+      const det = document.getElementById('activeDetails');
+      const av = document.getElementById('avatarIcon');
+      if (active) {
+        txt.className = 'beacon-status-sub';
+        txt.innerText = '● Broadcasting Presence';
+        det.style.display = 'flex';
+        av.classList.add('pulsing');
+      } else {
+        txt.className = 'beacon-status-sub dormant';
+        txt.innerText = '○ Dormant (Ghost Mode)';
+        det.style.display = 'none';
+        av.classList.remove('pulsing');
+      }
+    }
+
+    // Modal Controls
+    function openConfig() { document.getElementById('configModal').classList.add('open'); }
+    function closeConfig() { document.getElementById('configModal').classList.remove('open'); }
+    function selectVibe(v, el) {
+      document.querySelectorAll('.vibe-opt').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+    function randomizeHandle() {
+      const handles = ['Alex ⚡ Kotlin', 'Maya 🎨 UI/UX', 'Jordan 🌍 Lisbon', 'Sam ☕ Espresso', 'Elena 💡 AI', 'Lucas 🤝 Rust'];
+      document.getElementById('handleInput').value = handles[Math.floor(Math.random() * handles.length)];
+    }
+    function saveConfig() {
+      const h = document.getElementById('handleInput').value;
+      const selVibe = document.querySelector('.vibe-opt.selected').innerText;
+      const table = document.getElementById('tableInput').value;
+      document.getElementById('myHandleDisplay').innerHTML = `${h} <span class="edit-icon" onclick="openConfig()">✎</span>`;
+      document.getElementById('currentVibeBadge').innerText = selVibe;
+      document.getElementById('currentTableCue').innerText = table;
+      closeConfig();
+    }
+
+    // Wave Interactions
+    function openWave(id) {
+      selectedNomad = nomads.find(n => n.id === id);
+      if (!selectedNomad) return;
+      document.getElementById('waveModalTitle').innerText = `Wave to ${selectedNomad.handle.split(' ')[0]}`;
+      document.getElementById('waveModalSubtitle').innerText = `${selectedNomad.table} • ~${selectedNomad.dist}m away`;
+      document.getElementById('waveModal').classList.add('open');
+    }
+    function closeWaveModal() { document.getElementById('waveModal').classList.remove('open'); }
+    function setWaveMsg(m) { document.getElementById('waveInput').value = m; }
+    function quickIce(id, hook) {
+      openWave(id);
+      document.getElementById('waveInput').value = `💬 ${hook}`;
+    }
+    function confirmSendWave() {
+      playWaveSound();
+      closeWaveModal();
+      if (!selectedNomad) return;
+      const btn = document.getElementById(`btn_${selectedNomad.id}`);
+      if (btn) {
+        btn.className = 'btn-wave sent';
+        btn.innerHTML = '<span>✓</span> Wave Sent!';
+      }
+
+      setTimeout(() => {
+        playWaveSound();
+        const badge = document.getElementById('signalsBadge');
+        badge.style.display = 'block';
+        alert(`👋 ${selectedNomad.handle} waved back! "${selectedNomad.table}: Pull up a chair or come say hi!"`);
+      }, 1800);
+    }
+
+    // Filter Chips
+    function filterVibe(v, el) {
+      currentFilter = v;
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      renderNomads();
+    }
+
+    // Navigation
+    function switchNav(tab, el) {
+      document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+      if (tab === 'signals') {
+        document.getElementById('signalsBadge').style.display = 'none';
+        alert("Signals Log: 1 proximity wave received from Maya 🎨 ('Pull up a chair!')");
+      }
+    }
+
+    // 30-Second Video Reel Logic
+    let reelScene = 0;
+    let reelTimer = null;
+    const reelScenes = [
+      {
+        tag: 'SCENE 1/5 • THE PROBLEM',
+        title: 'Sit Down at Any Café',
+        sub: 'No algorithms. No profiles. Just proximity.',
+        text: 'Standard apps match you with people 50 miles away. ProxiBeacon detects only who is sitting right here in this room with you.',
+        graphic: '<div style="font-size:52px; margin-bottom:12px;">☕💻</div><h3 style="color:#fff; font-size:16px;">Lisbon Nomad Hub</h3><p style="color:rgba(255,255,255,0.7); font-size:12px; margin-top:4px;">12 digital nomads working within 10 meters</p>'
+      },
+      {
+        tag: 'SCENE 2/5 • BROADCAST VIBE',
+        title: 'Broadcast Your Presence',
+        sub: 'One switch emits your ephemeral BLE presence.',
+        text: 'Choose your status: 🟢 Open to Chat, ☕ Coffee Run, or 💡 Brainstorm. Add your physical seating cue so nomads can spot you without GPS.',
+        graphic: '<div style="font-size:52px; margin-bottom:12px;">📡✨</div><h3 style="color:#00ff88; font-size:16px;">Beacon Active</h3><p style="color:rgba(255,255,255,0.7); font-size:12px; margin-top:4px;">Window table #3 • Auto-expire in 60m</p>'
+      },
+      {
+        tag: 'SCENE 3/5 • CONCENTRIC RADAR',
+        title: 'Concentric Radar Proximity',
+        sub: 'Real-time BLE hardware distance detection.',
+        text: 'Radio signal strength (RSSI) calculates real distance tiers: Immediate (<1.5m), Near (1.5-4m), and Mid-range across the café.',
+        graphic: '<div style="font-size:52px; margin-bottom:12px;">🎯📶</div><h3 style="color:#00d4ff; font-size:16px;">4 Nomads Detected</h3><p style="color:rgba(255,255,255,0.7); font-size:12px; margin-top:4px;">Maya (1.2m) • Kai (2.3m) • Elena (3.7m)</p>'
+      },
+      {
+        tag: 'SCENE 4/5 • THE WAVE',
+        title: 'Send a Proximity Wave',
+        sub: 'Spontaneous in-person hello with zero awkwardness.',
+        text: 'Tap a blip and send a quick wave. Both devices ping—letting you look up, wave, or pull up a chair together.',
+        graphic: '<div style="font-size:52px; margin-bottom:12px;">👋💬</div><h3 style="color:#ff9100; font-size:16px;">Wave Exchanged!</h3><p style="color:rgba(255,255,255,0.7); font-size:12px; margin-top:4px;">"Saw you are open to chat! Pull up a chair!"</p>'
+      },
+      {
+        tag: 'SCENE 5/5 • PRIVACY',
+        title: '100% Ephemeral & Ghost Mode',
+        sub: 'No accounts. No logs. No cloud footprint.',
+        text: 'When your timer expires or you pack up your laptop, your beacon shuts down automatically. Zero tracking, zero storage.',
+        graphic: '<div style="font-size:52px; margin-bottom:12px;">🛡️⚡</div><h3 style="color:#fff; font-size:16px;">Zero Footprint</h3><p style="color:rgba(255,255,255,0.7); font-size:12px; margin-top:4px;">Pure device-to-device Bluetooth proximity</p>'
+      }
+    ];
+
+    function openReel() {
+      document.getElementById('reelModal').classList.add('active');
+      reelScene = 0;
+      showReelScene(0);
+    }
+    function closeReel() {
+      document.getElementById('reelModal').classList.remove('active');
+      clearTimeout(reelTimer);
+    }
+    function showReelScene(idx) {
+      reelScene = idx;
+      clearTimeout(reelTimer);
+
+      for (let i = 0; i < 5; i++) {
+        const bar = document.getElementById(`rb${i}`);
+        if (i < idx) bar.style.width = '100%';
+        else if (i === idx) bar.style.width = '0%';
+        else bar.style.width = '0%';
+      }
+
+      const curBar = document.getElementById(`rb${idx}`);
+      curBar.style.transition = 'width 5.5s linear';
+      setTimeout(() => { curBar.style.width = '100%'; }, 50);
+
+      const s = reelScenes[idx];
+      document.getElementById('reelTag').innerText = s.tag;
+      document.getElementById('reelTitle').innerText = s.title;
+      document.getElementById('reelSubtitle').innerText = s.sub;
+      document.getElementById('reelText').innerText = s.text;
+      document.getElementById('reelGraphic').innerHTML = s.graphic;
+
+      reelTimer = setTimeout(() => {
+        if (reelScene < 4) {
+          showReelScene(reelScene + 1);
+        }
+      }, 5600);
+    }
+    function nextReelScene() {
+      if (reelScene < 4) {
+        showReelScene(reelScene + 1);
+      } else {
+        closeReel();
+      }
+    }
+    function launchFromReel() {
+      closeReel();
+      toggleBeacon(true);
+      document.getElementById('beaconToggle').checked = true;
+      setTimeout(() => { openWave('maya_01'); }, 600);
+    }
+
+    // Init
+    renderNomads();
+  </script>
+</body>
+</html>

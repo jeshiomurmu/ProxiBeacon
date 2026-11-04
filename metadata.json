@@ -1,0 +1,6 @@
+{
+  "name": "ProxiBeacon",
+  "description": "Spontaneous real-time Bluetooth Low Energy (BLE) open to chat proximity signals for digital nomads with zero profiles, swipes, or algorithms.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
